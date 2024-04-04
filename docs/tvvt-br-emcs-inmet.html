@@ -1,0 +1,2729 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="JDT">
+
+<title>TVVT do Brasil a partir de dados de EMC do INMET</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="tvvt-br-emcs-inmet_files/libs/clipboard/clipboard.min.js"></script>
+<script src="tvvt-br-emcs-inmet_files/libs/quarto-html/quarto.js"></script>
+<script src="tvvt-br-emcs-inmet_files/libs/quarto-html/popper.min.js"></script>
+<script src="tvvt-br-emcs-inmet_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="tvvt-br-emcs-inmet_files/libs/quarto-html/anchor.min.js"></script>
+<link href="tvvt-br-emcs-inmet_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="tvvt-br-emcs-inmet_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="tvvt-br-emcs-inmet_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="tvvt-br-emcs-inmet_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="tvvt-br-emcs-inmet_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">TVVT do Brasil a partir de dados de EMC do INMET</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>JDT </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="introdução" class="level2">
+<h2 class="anchored" data-anchor-id="introdução">Introdução</h2>
+<p>Esta atividade tem por objetivo obter a taxa de variação vertical da temperatura do ar (TVVT) a partir dos dados de temperatura das estações meteorológicas convencionais (EMC) do INMET e compará-la com a TVVT média global (<em>Lapse rate</em> da atmosfera padrão) de -6,5°C/km.&nbsp;</p>
+<p>As informações de localização e altitude estão disponíveis em&nbsp;<a href="">https://portal.inmet.gov.br/uploads/normais/Normal-Climatologica-ESTA%C3%87%C3%95ES.xlsx</a>.&nbsp;</p>
+<p>A temperatura do ar média (T<sub>med</sub>) anual climatológica de 1991-2010 será usada para determinar a TVVT. Para obter a temperatura média faremos: <span class="math inline">\(T_{med} = (T_{max} + T_{min})/2\)</span>, em que <span class="math inline">\(T_{max}\)</span> é a tmperatura máxima do ar e <span class="math inline">\(T_{min}\)</span> a mínima. Estes dados podem ser baixados em&nbsp;<a href="">https://portal.inmet.gov.br/uploads/normais/Normal-Climatologica-TMAX.xlsx</a> e&nbsp;<a href="">https://portal.inmet.gov.br/uploads/normais/Normal-Climatologica-TMIN.xlsx</a>.</p>
+</section>
+<section id="pré-requisitos" class="level2">
+<h2 class="anchored" data-anchor-id="pré-requisitos">Pré-requisitos</h2>
+<p>Este documento foi elaborado para ilustrar como você pode se beneficiar ao usar o <a href="https://www.r-project.org/">R</a> e o <a href="https://posit.co/download/rstudio-desktop/">RStudio</a> como ferramentas de trabalho para manipulação e análise de dados.</p>
+<p>Você pode pensar neste documento como um relatório dinâmico e reproduzível. Dinâmico porque você pode fazer mudanças e ao clicar em <code>Render</code> (no menu do RStudio) seu relatório será atualizado. Reproduzível porque você passar este arquivo (<code>relatorio-atividade1-temo.qmd)</code> para outras pessoas (ou você mesmo no futuro pode reutilizá-lo) que poderão reproduzir os resultados que você encontrou num computador (com <a href="https://www.r-project.org/">R</a> e <a href="https://posit.co/download/rstudio-desktop/">RStudio</a>) deles.</p>
+<section id="pacotes-necessários" class="level3">
+<h3 class="anchored" data-anchor-id="pacotes-necessários">Pacotes necessários</h3>
+<p>Os pacotes abaixo serão necessários e precisam ser instalados com o código a seguir.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"pacman"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>pacotes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"here"</span>, <span class="st">"tidyverse"</span>, <span class="st">"readxl"</span>, </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>             <span class="st">"quarto"</span>, <span class="st">"easypackages"</span>, <span class="st">"here"</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>             <span class="st">"scales"</span>, <span class="st">"qs"</span>, <span class="st">"sf"</span>, <span class="st">"ggpmisc"</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>             <span class="st">"rlang"</span>, <span class="st">"broom"</span>, <span class="st">"knitr"</span>, <span class="st">"gt"</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>             )</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(<span class="at">char =</span> pacotes)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Script com funções auxiliares para gráficos.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"R/utils.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+</section>
+<section id="obtenção-dos-dados" class="level2">
+<h2 class="anchored" data-anchor-id="obtenção-dos-dados">Obtenção dos dados</h2>
+<p>Informações das EMC</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># link das informações das EMCs</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>link_info_emcs <span class="ot">&lt;-</span> <span class="st">"https://portal.inmet.gov.br/uploads/normais/Normal-Climatologica-ESTA%C3%87%C3%95ES.xlsx"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># nome do arquivo para salvar as informações das EMCs</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>file_info_emc <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"output/info-emc.xlsx"</span>))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># download </span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">download.file</span>(</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">url =</span> link_info_emcs, </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">destfile =</span> file_info_emc, </span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">method =</span> <span class="st">"wget"</span>, </span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">mode =</span> <span class="st">"wb"</span> </span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Dados de T<sub>max</sub> e T<sub>min</sub></p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># link do arquivo de Tmax</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>link_tmax <span class="ot">&lt;-</span> <span class="st">"https://portal.inmet.gov.br/uploads/normais/Normal-Climatologica-TMAX.xlsx"</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># nome do arquivo para salvar dados de Tmax</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>file_tmax <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"output/{basename(link_tmax)}"</span>))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># download </span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">download.file</span>(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">url =</span> link_tmax, </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">destfile =</span> file_tmax, </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">mode =</span> <span class="st">"wb"</span> </span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co"># link do arquivo de Tmin </span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>link_tmin <span class="ot">&lt;-</span> <span class="st">"https://portal.inmet.gov.br/uploads/normais/Normal-Climatologica-TMIN.xlsx"</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="co"># nome do arquivo para salvar dados de Tmin</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>file_tmin <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"output/{basename(link_tmin)}"</span>))</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="co"># downlaod</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="fu">download.file</span>(</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">url =</span> link_tmin, </span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">destfile =</span> file_tmin,</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">mode =</span> <span class="st">"wb"</span> </span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Dados de Temperatura compensada (T<sub>comp</sub>).</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># link do arquivo de Tmax</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>link_tcomp <span class="ot">&lt;-</span> <span class="st">"https://portal.inmet.gov.br/uploads/normais/Normal-Climatologica-TMEDSECA.xlsx"</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># nome do arquivo para salvar dados de Tmax</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>file_tcomp <span class="ot">&lt;-</span> here<span class="sc">::</span><span class="fu">here</span>(glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"output/{basename(link_tcomp)}"</span>))</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># download </span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">download.file</span>(</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">url =</span> link_tcomp, </span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">destfile =</span> file_tcomp, </span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">mode =</span> <span class="st">"wb"</span> </span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="importação-de-dados" class="level2">
+<h2 class="anchored" data-anchor-id="importação-de-dados">Importação de dados</h2>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>info_emc <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_xlsx</span>(file_info_emc, <span class="at">skip =</span> <span class="dv">2</span>, <span class="at">col_names =</span> <span class="cn">TRUE</span>, <span class="at">na =</span> <span class="st">""</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(codigo<span class="sc">:</span>atitude) <span class="sc">|&gt;</span> </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">"altitude"</span> <span class="ot">=</span> <span class="st">"atitude"</span>)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>info_emc</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 271 × 6</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    codigo nome_da_estacao   uf    latitude longitude altitude</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt; &lt;chr&gt;             &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1  82989 AGUA BRANCA       AL       -9.26     -37.9   603.  </span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2  83249 ALAGOINHAS        BA      -12.1      -38.4   130.  </span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3  82353 ALTAMIRA          PA       -3.21     -52.2   102.  </span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4  83007 ALTO DA BOA VISTA RJ      -23.0      -43.3   347.  </span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5  82970 ALTO PARNAIBA     MA       -9.11     -45.9   285.  </span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6  83788 ANGRA DOS REIS    RJ      -23.0      -44.3    17.0 </span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7  82590 APODI             RN       -5.63     -37.8   131.  </span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8  83096 ARACAJU           SE      -11.0      -37.1     3.68</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9  83442 ARACUAI           MG      -16.8      -42.1   318.  </span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10  83368 ARAGARCAS         GO      -15.9      -52.2   327.  </span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 261 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tmax <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_xlsx</span>(file_tmax, <span class="at">skip =</span> <span class="dv">2</span>, <span class="at">col_names =</span> <span class="cn">TRUE</span>, <span class="at">na =</span> <span class="st">"-"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(codigo, nome_da_estacao, uf, ano) <span class="sc">|&gt;</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">"tmax_anual"</span> <span class="ot">=</span> <span class="st">"ano"</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>tmin <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_xlsx</span>(file_tmin, <span class="at">skip =</span> <span class="dv">2</span>, <span class="at">col_names =</span> <span class="cn">TRUE</span>, <span class="at">na =</span> <span class="st">"-"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(codigo, nome_da_estacao, uf, ano) <span class="sc">|&gt;</span> </span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">"tmin_anual"</span> <span class="ot">=</span> <span class="st">"ano"</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>tcomp <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_xlsx</span>(file_tcomp, <span class="at">skip =</span> <span class="dv">2</span>, <span class="at">col_names =</span> <span class="cn">TRUE</span>, <span class="at">na =</span> <span class="st">"-"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  janitor<span class="sc">::</span><span class="fu">clean_names</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(codigo, nome_da_estacao, uf, ano) <span class="sc">|&gt;</span> </span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(<span class="st">"tcomp_anual"</span> <span class="ot">=</span> <span class="st">"ano"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="cálculo-da-tmed" class="level2">
+<h2 class="anchored" data-anchor-id="cálculo-da-tmed">Cálculo da T<sub>med</sub></h2>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># juncao das tabelas de tmax e tmin</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tmed <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">full_join</span>(tmax, tmin, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"codigo"</span>, <span class="st">"nome_da_estacao"</span>, <span class="st">"uf"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># calculo da tmed</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">tmed_anual =</span> (tmax_anual <span class="sc">+</span> tmin_anual)<span class="sc">/</span><span class="dv">2</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># remocao de linhas com dados faltantes</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(tmed_anual))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># juncao das tabelas de tmed e tcomp</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>tmed <span class="ot">&lt;-</span> tcomp <span class="sc">|&gt;</span> </span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(tcomp_anual)) <span class="sc">|&gt;</span> </span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">inner_join</span>(tmed, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"codigo"</span>, <span class="st">"nome_da_estacao"</span>, <span class="st">"uf"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="combinação-da-tmed-e-altitude" class="level2">
+<h2 class="anchored" data-anchor-id="combinação-da-tmed-e-altitude">Combinação da T<sub>med</sub> e altitude</h2>
+<p>Junção das tabelas de T<sub>med</sub> com as informações das EMCs.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>data_inmet <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">inner_join</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  info_emc, tmed,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"codigo"</span>, <span class="st">"nome_da_estacao"</span>, <span class="st">"uf"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+</section>
+<section id="estimativa-da-tvvt-via-regressão-linear-simples" class="level2">
+<h2 class="anchored" data-anchor-id="estimativa-da-tvvt-via-regressão-linear-simples">Estimativa da TVVT via regressão linear simples</h2>
+<p>Para estimar a TVVT das EMCs faremos uma <a href="https://pt.wikipedia.org/wiki/Regress%C3%A3o_linear_simples">regressão linear simples</a> entre T<sub>med</sub> (preditando) e a altitude do terreno (preditor). Este modelo busca prever a T<sub>med</sub> anual climatológica, somente em função da altitude e assume que esta relação é linear. A forma da equação da reta de regressão é <span class="math inline">\(y = \widehat{b}x + \widehat{a}\)</span>; em que <span class="math inline">\(\widehat{b}\)</span> é a estimativa do coeficiente angular e <span class="math inline">\(\widehat{a}\)</span> a estimativa do coeficiente linear (intercepto). A interpretação do valor de <span class="math inline">\(\widehat{a}\)</span> é a temperatura média anual que intercepta o eixo (<span class="math inline">\(y\)</span>) quando a altitude <span class="math inline">\(x = 0\)</span>.</p>
+<p>Ajuste da regressão para T<sub>med</sub>.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculo dos coeficientes da reta de regressao  </span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>reg_tmed <span class="ot">&lt;-</span> <span class="fu">lm</span>(tmed_anual <span class="sc">~</span> altitude, <span class="at">data =</span> data_inmet)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>reg_tmed_coefs <span class="ot">&lt;-</span> reg_tmed <span class="sc">|&gt;</span> broom<span class="sc">::</span><span class="fu">tidy</span>()</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(reg_tmed_coefs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">term</th>
+<th style="text-align: right;">estimate</th>
+<th style="text-align: right;">std.error</th>
+<th style="text-align: right;">statistic</th>
+<th style="text-align: right;">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">26.6575398</td>
+<td style="text-align: right;">0.3880394</td>
+<td style="text-align: right;">68.698022</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">altitude</td>
+<td style="text-align: right;">-0.0057222</td>
+<td style="text-align: right;">0.0007232</td>
+<td style="text-align: right;">-7.912184</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>estats_reg_tmed  <span class="ot">&lt;-</span> reg_tmed <span class="sc">|&gt;</span> broom<span class="sc">::</span><span class="fu">glance</span>()</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(estats_reg_tmed)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 12%">
+<col style="width: 8%">
+<col style="width: 9%">
+<col style="width: 7%">
+<col style="width: 2%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 11%">
+<col style="width: 4%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">r.squared</th>
+<th style="text-align: right;">adj.r.squared</th>
+<th style="text-align: right;">sigma</th>
+<th style="text-align: right;">statistic</th>
+<th style="text-align: right;">p.value</th>
+<th style="text-align: right;">df</th>
+<th style="text-align: right;">logLik</th>
+<th style="text-align: right;">AIC</th>
+<th style="text-align: right;">BIC</th>
+<th style="text-align: right;">deviance</th>
+<th style="text-align: right;">df.residual</th>
+<th style="text-align: right;">nobs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.3669501</td>
+<td style="text-align: right;">0.3610885</td>
+<td style="text-align: right;">2.707078</td>
+<td style="text-align: right;">62.60266</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-264.6197</td>
+<td style="text-align: right;">535.2395</td>
+<td style="text-align: right;">543.3409</td>
+<td style="text-align: right;">791.4534</td>
+<td style="text-align: right;">108</td>
+<td style="text-align: right;">110</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># extracao dos coefs e conversão para °C/km</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>tvvt_tmed <span class="ot">&lt;-</span> reg_tmed_coefs<span class="sc">$</span>estimate[<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>intercep_tmed <span class="ot">&lt;-</span> reg_tmed_coefs<span class="sc">$</span>estimate[<span class="dv">1</span>]</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>r2_tmed <span class="ot">&lt;-</span> estats_reg_tmed<span class="sc">$</span>r.squared</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Gráfico para T<sub>med</sub>.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>lapse_rate <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">6.5</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>plot_tvvt_tmed <span class="ot">&lt;-</span>   </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># dados para plot e como mapear as variaveis nos eixos</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="at">data =</span> data_inmet, <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x =</span> altitude, <span class="at">y =</span> tmed_anual)) <span class="sc">+</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># adicionar pontos</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># adicionar reta da regressão linear</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">formula =</span> y <span class="sc">~</span> x, <span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">col =</span> <span class="st">"green"</span>) <span class="sc">+</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="co">#geom_smooth(se = FALSE, linetype = 2, colour = "white") + </span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># adicionar mais marcas nos eixos </span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Temperatura média anual (°C)"</span>,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> scales<span class="sc">::</span><span class="fu">pretty_breaks</span>(<span class="dv">20</span>)</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">name =</span> <span class="st">"Altitude (m)"</span>,</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> scales<span class="sc">::</span><span class="fu">pretty_breaks</span>(<span class="dv">20</span>)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">slope =</span> lapse_rate<span class="sc">/</span><span class="dv">1000</span>,</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">intercept =</span> intercep_tmed, </span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="dv">3</span></span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">linetype =</span> <span class="dv">2</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="at">label =</span> glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"TVVT: {round(tvvt_tmed, 2)} °C/km, R² = {round(r2_tmed, 2)}"</span>), </span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>          <span class="at">subtitle =</span> glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"Lapse rate: {round(lapse_rate, 3)} °C/km"</span>)) <span class="sc">+</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">color =</span> <span class="st">"green"</span>))</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>plot_tvvt_tmed</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tvvt-br-emcs-inmet_files/figure-html/plot-tmed-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Ajuste da regressão para T<sub>min</sub>.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculo dos coeficientes da reta de regressao  </span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>reg_tmin <span class="ot">&lt;-</span> <span class="fu">lm</span>(tmin_anual <span class="sc">~</span> altitude, <span class="at">data =</span> data_inmet)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>reg_tmin_coefs <span class="ot">&lt;-</span>  broom<span class="sc">::</span><span class="fu">tidy</span>(reg_tmin)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(reg_tmin_coefs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">term</th>
+<th style="text-align: right;">estimate</th>
+<th style="text-align: right;">std.error</th>
+<th style="text-align: right;">statistic</th>
+<th style="text-align: right;">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">21.7959371</td>
+<td style="text-align: right;">0.3747046</td>
+<td style="text-align: right;">58.168315</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">altitude</td>
+<td style="text-align: right;">-0.0067131</td>
+<td style="text-align: right;">0.0006984</td>
+<td style="text-align: right;">-9.612795</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>estats_reg_tmin  <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">glance</span>(reg_tmin)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(estats_reg_tmin)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 12%">
+<col style="width: 8%">
+<col style="width: 9%">
+<col style="width: 7%">
+<col style="width: 2%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 11%">
+<col style="width: 4%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">r.squared</th>
+<th style="text-align: right;">adj.r.squared</th>
+<th style="text-align: right;">sigma</th>
+<th style="text-align: right;">statistic</th>
+<th style="text-align: right;">p.value</th>
+<th style="text-align: right;">df</th>
+<th style="text-align: right;">logLik</th>
+<th style="text-align: right;">AIC</th>
+<th style="text-align: right;">BIC</th>
+<th style="text-align: right;">deviance</th>
+<th style="text-align: right;">df.residual</th>
+<th style="text-align: right;">nobs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.4610935</td>
+<td style="text-align: right;">0.4561036</td>
+<td style="text-align: right;">2.614051</td>
+<td style="text-align: right;">92.40583</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-260.7732</td>
+<td style="text-align: right;">527.5463</td>
+<td style="text-align: right;">535.6478</td>
+<td style="text-align: right;">737.9923</td>
+<td style="text-align: right;">108</td>
+<td style="text-align: right;">110</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># extracao dos coefs e conversão para °C/km</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>tvvt_tmin <span class="ot">&lt;-</span> reg_tmin_coefs<span class="sc">$</span>estimate[<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>tvvt_tmin</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -6.713144</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>intercep_tmin <span class="ot">&lt;-</span> reg_tmin_coefs<span class="sc">$</span>estimate[<span class="dv">1</span>]</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>intercep_tmin</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 21.79594</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>r2_tmin <span class="ot">&lt;-</span> estats_reg_tmin<span class="sc">$</span>r.squared</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Gráfico para T<sub>min</sub>.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>plot_tvvt_tmin <span class="ot">&lt;-</span> <span class="fu">plot_tvvt</span>(data_inmet, </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">yvar =</span> <span class="st">"tmin_anual"</span>, </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">tvvt =</span> tvvt_tmin, </span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">intercepto =</span> intercep_tmin,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">rquad =</span>  r2_tmin,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>                          <span class="at">cor_tvvt =</span> <span class="st">"blue"</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>                          )</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>plot_tvvt_tmin</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tvvt-br-emcs-inmet_files/figure-html/plot-tmin-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Ajuste da regressão para T<sub>max</sub>.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculo dos coeficientes da reta de regressao  </span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>reg_tmax <span class="ot">&lt;-</span> <span class="fu">lm</span>(tmax_anual <span class="sc">~</span> altitude, <span class="at">data =</span> data_inmet)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>reg_tmax_coefs <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">tidy</span>(reg_tmax)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(reg_tmax_coefs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">term</th>
+<th style="text-align: right;">estimate</th>
+<th style="text-align: right;">std.error</th>
+<th style="text-align: right;">statistic</th>
+<th style="text-align: right;">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">31.5191424</td>
+<td style="text-align: right;">0.4381474</td>
+<td style="text-align: right;">71.937308</td>
+<td style="text-align: right;">0e+00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">altitude</td>
+<td style="text-align: right;">-0.0047312</td>
+<td style="text-align: right;">0.0008166</td>
+<td style="text-align: right;">-5.793757</td>
+<td style="text-align: right;">1e-07</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>estats_reg_tmax  <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">glance</span>(reg_tmax)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(estats_reg_tmax)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 12%">
+<col style="width: 8%">
+<col style="width: 9%">
+<col style="width: 7%">
+<col style="width: 2%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 11%">
+<col style="width: 4%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">r.squared</th>
+<th style="text-align: right;">adj.r.squared</th>
+<th style="text-align: right;">sigma</th>
+<th style="text-align: right;">statistic</th>
+<th style="text-align: right;">p.value</th>
+<th style="text-align: right;">df</th>
+<th style="text-align: right;">logLik</th>
+<th style="text-align: right;">AIC</th>
+<th style="text-align: right;">BIC</th>
+<th style="text-align: right;">deviance</th>
+<th style="text-align: right;">df.residual</th>
+<th style="text-align: right;">nobs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.2371137</td>
+<td style="text-align: right;">0.2300499</td>
+<td style="text-align: right;">3.056646</td>
+<td style="text-align: right;">33.56762</td>
+<td style="text-align: right;">1e-07</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-277.9791</td>
+<td style="text-align: right;">561.9581</td>
+<td style="text-align: right;">570.0595</td>
+<td style="text-align: right;">1009.053</td>
+<td style="text-align: right;">108</td>
+<td style="text-align: right;">110</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># extracao dos coefs e conversão para °C/km</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>tvvt_tmax <span class="ot">&lt;-</span> reg_tmax_coefs<span class="sc">$</span>estimate[<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>tvvt_tmax</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -4.731161</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>intercep_tmax <span class="ot">&lt;-</span> reg_tmax_coefs<span class="sc">$</span>estimate[<span class="dv">1</span>]</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>intercep_tmax</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 31.51914</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>r2_tmax <span class="ot">&lt;-</span> estats_reg_tmax<span class="sc">$</span>r.squared</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Gráfico para T<sub>max</sub>.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>plot_tvvt_tmax <span class="ot">&lt;-</span> <span class="fu">plot_tvvt</span>(data_inmet, </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">yvar =</span> <span class="st">"tmax_anual"</span>, </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">tvvt =</span> tvvt_tmax, </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">intercepto =</span> intercep_tmax, </span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">rquad =</span> r2_tmax,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>                          <span class="at">cor_tvvt =</span> <span class="st">"red"</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                          )</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>plot_tvvt_tmax</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tvvt-br-emcs-inmet_files/figure-html/plot-tmax-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Ajuste da regressão para T<sub>comp</sub>.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculo dos coeficientes da reta de regressao  </span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>reg_tcomp <span class="ot">&lt;-</span> <span class="fu">lm</span>(tcomp_anual <span class="sc">~</span> altitude, <span class="at">data =</span> data_inmet)</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>reg_tcomp_coefs <span class="ot">&lt;-</span>  broom<span class="sc">::</span><span class="fu">tidy</span>(reg_tcomp)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(reg_tcomp_coefs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">term</th>
+<th style="text-align: right;">estimate</th>
+<th style="text-align: right;">std.error</th>
+<th style="text-align: right;">statistic</th>
+<th style="text-align: right;">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">25.9954226</td>
+<td style="text-align: right;">0.3860799</td>
+<td style="text-align: right;">67.331723</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">altitude</td>
+<td style="text-align: right;">-0.0059767</td>
+<td style="text-align: right;">0.0007196</td>
+<td style="text-align: right;">-8.306068</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>estats_reg_tcomp  <span class="ot">&lt;-</span> broom<span class="sc">::</span><span class="fu">glance</span>(reg_tcomp)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(estats_reg_tcomp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 12%">
+<col style="width: 8%">
+<col style="width: 9%">
+<col style="width: 7%">
+<col style="width: 2%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 11%">
+<col style="width: 4%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">r.squared</th>
+<th style="text-align: right;">adj.r.squared</th>
+<th style="text-align: right;">sigma</th>
+<th style="text-align: right;">statistic</th>
+<th style="text-align: right;">p.value</th>
+<th style="text-align: right;">df</th>
+<th style="text-align: right;">logLik</th>
+<th style="text-align: right;">AIC</th>
+<th style="text-align: right;">BIC</th>
+<th style="text-align: right;">deviance</th>
+<th style="text-align: right;">df.residual</th>
+<th style="text-align: right;">nobs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0.3897987</td>
+<td style="text-align: right;">0.3841486</td>
+<td style="text-align: right;">2.693408</td>
+<td style="text-align: right;">68.99076</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-264.0628</td>
+<td style="text-align: right;">534.1257</td>
+<td style="text-align: right;">542.2271</td>
+<td style="text-align: right;">783.4802</td>
+<td style="text-align: right;">108</td>
+<td style="text-align: right;">110</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co"># extracao dos coefs e conversão para °C/km</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>tvvt_tcomp <span class="ot">&lt;-</span> reg_tcomp_coefs<span class="sc">$</span>estimate[<span class="dv">2</span>] <span class="sc">*</span> <span class="dv">1000</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>tvvt_tcomp</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -5.976678</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>intercep_tcomp <span class="ot">&lt;-</span> reg_tcomp_coefs<span class="sc">$</span>estimate[<span class="dv">1</span>]</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>intercep_tcomp</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 25.99542</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>r2_tcomp <span class="ot">&lt;-</span> estats_reg_tcomp<span class="sc">$</span>r.squared</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Gráfico para T<sub>comp</sub>.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>plot_tvvt_tcomp <span class="ot">&lt;-</span> <span class="fu">plot_tvvt</span>(data_inmet, </span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">yvar =</span> <span class="st">"tcomp_anual"</span>, </span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">tvvt =</span> tvvt_tcomp, </span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">intercepto =</span> intercep_tcomp, </span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">rquad =</span> r2_tcomp,</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>                          <span class="at">cor_tvvt =</span> <span class="st">"gray30"</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>                          )</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>plot_tvvt_tcomp</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tvvt-br-emcs-inmet_files/figure-html/plot-tcomp-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="comparação-das-tvvts-e-qualidade-dos-ajustes-das-regressões." class="level2">
+<h2 class="anchored" data-anchor-id="comparação-das-tvvts-e-qualidade-dos-ajustes-das-regressões.">Comparação das TVVTs e qualidade dos ajustes das regressões.</h2>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>tab_resumo <span class="ot">&lt;-</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="sc">~</span>Temperatura,      <span class="sc">~</span>TVVT,         <span class="sc">~</span>dif_lapse_rate,    <span class="sc">~</span>intercepto,  <span class="sc">~</span>r2,</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Tmed"</span>,  tvvt_tmed,  tvvt_tmed <span class="sc">-</span> lapse_rate,  intercep_tmed, estats_reg_tmed[[<span class="st">"r.squared"</span>]],</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>     <span class="st">"Tcomp"</span>, tvvt_tcomp, tvvt_tcomp <span class="sc">-</span> lapse_rate, intercep_tcomp, estats_reg_tcomp[[<span class="st">"r.squared"</span>]],</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Tmax"</span>,  tvvt_tmax,  tvvt_tmax <span class="sc">-</span> lapse_rate,  intercep_tmax, estats_reg_tmax[[<span class="st">"r.squared"</span>]],</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Tmin"</span>,  tvvt_tmin,  tvvt_tmin <span class="sc">-</span> lapse_rate,  intercep_tmin, estats_reg_tmin[[<span class="st">"r.squared"</span>]],</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(tab_resumo)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Temperatura</th>
+<th style="text-align: right;">TVVT</th>
+<th style="text-align: right;">dif_lapse_rate</th>
+<th style="text-align: right;">intercepto</th>
+<th style="text-align: right;">r2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Tmed</td>
+<td style="text-align: right;">-5.722152</td>
+<td style="text-align: right;">0.7778476</td>
+<td style="text-align: right;">26.65754</td>
+<td style="text-align: right;">0.3669501</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tcomp</td>
+<td style="text-align: right;">-5.976678</td>
+<td style="text-align: right;">0.5233225</td>
+<td style="text-align: right;">25.99542</td>
+<td style="text-align: right;">0.3897987</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Tmax</td>
+<td style="text-align: right;">-4.731161</td>
+<td style="text-align: right;">1.7688391</td>
+<td style="text-align: right;">31.51914</td>
+<td style="text-align: right;">0.2371137</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Tmin</td>
+<td style="text-align: right;">-6.713144</td>
+<td style="text-align: right;">-0.2131439</td>
+<td style="text-align: right;">21.79594</td>
+<td style="text-align: right;">0.4610935</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="variação-da-tvvt-por-região" class="level1">
+<h1>Variação da TVVT por região</h1>
+<p>Vamos carregar os polígonos dos estados e das regiões do Brasil para visualização da localização das EMCs com dados para determinação da TVVT.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>pols_estados <span class="ot">&lt;-</span> <span class="fu">load_pols_states</span>()</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>ggp_emcs <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(pols_estados) <span class="sc">+</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> regiao)) <span class="sc">+</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> data_inmet, <span class="fu">aes</span>(<span class="at">x =</span> longitude, <span class="at">y =</span> latitude), </span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">shape =</span> <span class="dv">4</span>, <span class="at">size =</span> <span class="fl">0.7</span>)</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>ggp_emcs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tvvt-br-emcs-inmet_files/figure-html/poligonos-estados-regiao-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Em seguida, vamos incluir a informação da região nos dados <code>data_inmet</code> para visualizar as variações da TVVT por região. Para isso faremos a junção do <code>data_inmet</code> com os polígonos dos estados (<code>pols_estados</code>) usando como variável de ligação a coluna <code>uf</code> que é comum a ambos conjunto de dados.</p>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>data_inmet <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">left_join</span>(</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  data_inmet,</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># tirar as coordenadas dos polígonos (coluna geometry)</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  sf<span class="sc">::</span><span class="fu">st_drop_geometry</span>(pols_estados),</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"uf"</span>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">relocate</span>(regiao) <span class="sc">|&gt;</span> </span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="co"># limpando nomes das regiões</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(regiao)</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(data_inmet)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped small">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 5%">
+<col style="width: 20%">
+<col style="width: 2%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 7%">
+<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 8%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">regiao</th>
+<th style="text-align: right;">codigo</th>
+<th style="text-align: left;">nome_da_estacao</th>
+<th style="text-align: left;">uf</th>
+<th style="text-align: right;">latitude</th>
+<th style="text-align: right;">longitude</th>
+<th style="text-align: right;">altitude</th>
+<th style="text-align: right;">tcomp_anual</th>
+<th style="text-align: right;">tmax_anual</th>
+<th style="text-align: right;">tmin_anual</th>
+<th style="text-align: right;">tmed_anual</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83368</td>
+<td style="text-align: left;">ARAGARCAS</td>
+<td style="text-align: left;">GO</td>
+<td style="text-align: right;">-15.902500</td>
+<td style="text-align: right;">-52.24528</td>
+<td style="text-align: right;">327.03</td>
+<td style="text-align: right;">26.0</td>
+<td style="text-align: right;">33.3</td>
+<td style="text-align: right;">20.2</td>
+<td style="text-align: right;">26.75</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83377</td>
+<td style="text-align: left;">BRASILIA</td>
+<td style="text-align: left;">DF</td>
+<td style="text-align: right;">-15.789722</td>
+<td style="text-align: right;">-47.92583</td>
+<td style="text-align: right;">1161.42</td>
+<td style="text-align: right;">21.4</td>
+<td style="text-align: right;">27.0</td>
+<td style="text-align: right;">17.0</td>
+<td style="text-align: right;">22.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83526</td>
+<td style="text-align: left;">CATALAO</td>
+<td style="text-align: left;">GO</td>
+<td style="text-align: right;">-18.170278</td>
+<td style="text-align: right;">-47.95806</td>
+<td style="text-align: right;">857.98</td>
+<td style="text-align: right;">23.2</td>
+<td style="text-align: right;">29.4</td>
+<td style="text-align: right;">18.4</td>
+<td style="text-align: right;">23.90</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83379</td>
+<td style="text-align: left;">FORMOSA</td>
+<td style="text-align: left;">GO</td>
+<td style="text-align: right;">-15.549167</td>
+<td style="text-align: right;">-47.33889</td>
+<td style="text-align: right;">938.68</td>
+<td style="text-align: right;">22.8</td>
+<td style="text-align: right;">28.5</td>
+<td style="text-align: right;">17.9</td>
+<td style="text-align: right;">23.20</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83423</td>
+<td style="text-align: left;">GOIANIA</td>
+<td style="text-align: left;">GO</td>
+<td style="text-align: right;">-16.673056</td>
+<td style="text-align: right;">-49.26389</td>
+<td style="text-align: right;">748.53</td>
+<td style="text-align: right;">24.5</td>
+<td style="text-align: right;">31.4</td>
+<td style="text-align: right;">18.6</td>
+<td style="text-align: right;">25.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83522</td>
+<td style="text-align: left;">IPAMERI</td>
+<td style="text-align: left;">GO</td>
+<td style="text-align: right;">-17.724527</td>
+<td style="text-align: right;">-48.17192</td>
+<td style="text-align: right;">778.14</td>
+<td style="text-align: right;">22.9</td>
+<td style="text-align: right;">29.7</td>
+<td style="text-align: right;">17.7</td>
+<td style="text-align: right;">23.70</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83464</td>
+<td style="text-align: left;">JATAI</td>
+<td style="text-align: left;">GO</td>
+<td style="text-align: right;">-17.923611</td>
+<td style="text-align: right;">-51.71750</td>
+<td style="text-align: right;">669.84</td>
+<td style="text-align: right;">22.8</td>
+<td style="text-align: right;">30.9</td>
+<td style="text-align: right;">17.2</td>
+<td style="text-align: right;">24.05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83214</td>
+<td style="text-align: left;">MATUPA</td>
+<td style="text-align: left;">MT</td>
+<td style="text-align: right;">-10.191667</td>
+<td style="text-align: right;">-54.94611</td>
+<td style="text-align: right;">272.00</td>
+<td style="text-align: right;">25.4</td>
+<td style="text-align: right;">32.8</td>
+<td style="text-align: right;">20.2</td>
+<td style="text-align: right;">26.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83364</td>
+<td style="text-align: left;">PADRE RICARDO REMETTER</td>
+<td style="text-align: left;">MT</td>
+<td style="text-align: right;">-15.776000</td>
+<td style="text-align: right;">-56.07200</td>
+<td style="text-align: right;">140.00</td>
+<td style="text-align: right;">25.9</td>
+<td style="text-align: right;">33.2</td>
+<td style="text-align: right;">21.1</td>
+<td style="text-align: right;">27.15</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83376</td>
+<td style="text-align: left;">PIRENOPOLIS</td>
+<td style="text-align: left;">GO</td>
+<td style="text-align: right;">-15.854722</td>
+<td style="text-align: right;">-48.96611</td>
+<td style="text-align: right;">766.92</td>
+<td style="text-align: right;">23.3</td>
+<td style="text-align: right;">31.0</td>
+<td style="text-align: right;">17.9</td>
+<td style="text-align: right;">24.45</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Centro-oeste</td>
+<td style="text-align: right;">83332</td>
+<td style="text-align: left;">POSSE</td>
+<td style="text-align: left;">GO</td>
+<td style="text-align: right;">-14.089070</td>
+<td style="text-align: right;">-46.36653</td>
+<td style="text-align: right;">830.35</td>
+<td style="text-align: right;">24.4</td>
+<td style="text-align: right;">30.2</td>
+<td style="text-align: right;">20.0</td>
+<td style="text-align: right;">25.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83249</td>
+<td style="text-align: left;">ALAGOINHAS</td>
+<td style="text-align: left;">BA</td>
+<td style="text-align: right;">-12.148611</td>
+<td style="text-align: right;">-38.42528</td>
+<td style="text-align: right;">129.78</td>
+<td style="text-align: right;">24.6</td>
+<td style="text-align: right;">30.5</td>
+<td style="text-align: right;">20.1</td>
+<td style="text-align: right;">25.30</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82970</td>
+<td style="text-align: left;">ALTO PARNAIBA</td>
+<td style="text-align: left;">MA</td>
+<td style="text-align: right;">-9.108333</td>
+<td style="text-align: right;">-45.94861</td>
+<td style="text-align: right;">285.05</td>
+<td style="text-align: right;">26.3</td>
+<td style="text-align: right;">33.6</td>
+<td style="text-align: right;">20.7</td>
+<td style="text-align: right;">27.15</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83096</td>
+<td style="text-align: left;">ARACAJU</td>
+<td style="text-align: left;">SE</td>
+<td style="text-align: right;">-10.952500</td>
+<td style="text-align: right;">-37.05444</td>
+<td style="text-align: right;">3.68</td>
+<td style="text-align: right;">26.4</td>
+<td style="text-align: right;">29.5</td>
+<td style="text-align: right;">23.1</td>
+<td style="text-align: right;">26.30</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82784</td>
+<td style="text-align: left;">BARBALHA</td>
+<td style="text-align: left;">CE</td>
+<td style="text-align: right;">-7.300925</td>
+<td style="text-align: right;">-39.27111</td>
+<td style="text-align: right;">409.41</td>
+<td style="text-align: right;">26.0</td>
+<td style="text-align: right;">32.7</td>
+<td style="text-align: right;">21.0</td>
+<td style="text-align: right;">26.85</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82571</td>
+<td style="text-align: left;">BARRA DO CORDA</td>
+<td style="text-align: left;">MA</td>
+<td style="text-align: right;">-5.506389</td>
+<td style="text-align: right;">-45.23722</td>
+<td style="text-align: right;">154.17</td>
+<td style="text-align: right;">27.0</td>
+<td style="text-align: right;">33.2</td>
+<td style="text-align: right;">22.1</td>
+<td style="text-align: right;">27.65</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83288</td>
+<td style="text-align: left;">BOM JESUS DA LAPA</td>
+<td style="text-align: left;">BA</td>
+<td style="text-align: right;">-13.251097</td>
+<td style="text-align: right;">-43.40537</td>
+<td style="text-align: right;">447.75</td>
+<td style="text-align: right;">26.4</td>
+<td style="text-align: right;">33.1</td>
+<td style="text-align: right;">20.6</td>
+<td style="text-align: right;">26.85</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82765</td>
+<td style="text-align: left;">CAROLINA</td>
+<td style="text-align: left;">MA</td>
+<td style="text-align: right;">-7.337222</td>
+<td style="text-align: right;">-47.45972</td>
+<td style="text-align: right;">182.94</td>
+<td style="text-align: right;">27.2</td>
+<td style="text-align: right;">33.3</td>
+<td style="text-align: right;">22.5</td>
+<td style="text-align: right;">27.90</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82382</td>
+<td style="text-align: left;">CHAPADINHA</td>
+<td style="text-align: left;">MA</td>
+<td style="text-align: right;">-3.742684</td>
+<td style="text-align: right;">-43.35210</td>
+<td style="text-align: right;">104.00</td>
+<td style="text-align: right;">27.2</td>
+<td style="text-align: right;">33.4</td>
+<td style="text-align: right;">23.1</td>
+<td style="text-align: right;">28.25</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83192</td>
+<td style="text-align: left;">CIPO</td>
+<td style="text-align: left;">BA</td>
+<td style="text-align: right;">-11.101389</td>
+<td style="text-align: right;">-38.52417</td>
+<td style="text-align: right;">143.53</td>
+<td style="text-align: right;">25.6</td>
+<td style="text-align: right;">32.2</td>
+<td style="text-align: right;">20.5</td>
+<td style="text-align: right;">26.35</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82693</td>
+<td style="text-align: left;">CRUZETA</td>
+<td style="text-align: left;">RN</td>
+<td style="text-align: right;">-6.426389</td>
+<td style="text-align: right;">-36.79139</td>
+<td style="text-align: right;">226.33</td>
+<td style="text-align: right;">27.5</td>
+<td style="text-align: right;">34.0</td>
+<td style="text-align: right;">22.7</td>
+<td style="text-align: right;">28.35</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82678</td>
+<td style="text-align: left;">FLORIANO</td>
+<td style="text-align: left;">PI</td>
+<td style="text-align: right;">-6.761667</td>
+<td style="text-align: right;">-43.00333</td>
+<td style="text-align: right;">126.60</td>
+<td style="text-align: right;">28.3</td>
+<td style="text-align: right;">34.5</td>
+<td style="text-align: right;">23.2</td>
+<td style="text-align: right;">28.85</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82397</td>
+<td style="text-align: left;">FORTALEZA</td>
+<td style="text-align: left;">CE</td>
+<td style="text-align: right;">-3.815278</td>
+<td style="text-align: right;">-38.53778</td>
+<td style="text-align: right;">29.89</td>
+<td style="text-align: right;">27.0</td>
+<td style="text-align: right;">31.1</td>
+<td style="text-align: right;">23.9</td>
+<td style="text-align: right;">27.50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82487</td>
+<td style="text-align: left;">GUARAMIRANGA</td>
+<td style="text-align: left;">CE</td>
+<td style="text-align: right;">-4.261389</td>
+<td style="text-align: right;">-38.93111</td>
+<td style="text-align: right;">865.44</td>
+<td style="text-align: right;">20.9</td>
+<td style="text-align: right;">25.8</td>
+<td style="text-align: right;">18.4</td>
+<td style="text-align: right;">22.10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83446</td>
+<td style="text-align: left;">GUARATINGA</td>
+<td style="text-align: left;">BA</td>
+<td style="text-align: right;">-16.580810</td>
+<td style="text-align: right;">-39.78318</td>
+<td style="text-align: right;">197.88</td>
+<td style="text-align: right;">23.9</td>
+<td style="text-align: right;">29.4</td>
+<td style="text-align: right;">20.1</td>
+<td style="text-align: right;">24.75</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83195</td>
+<td style="text-align: left;">ITABAIANINHA</td>
+<td style="text-align: left;">SE</td>
+<td style="text-align: right;">-11.272334</td>
+<td style="text-align: right;">-37.79497</td>
+<td style="text-align: right;">205.59</td>
+<td style="text-align: right;">24.6</td>
+<td style="text-align: right;">29.6</td>
+<td style="text-align: right;">21.2</td>
+<td style="text-align: right;">25.40</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82493</td>
+<td style="text-align: left;">JAGUARUANA</td>
+<td style="text-align: left;">CE</td>
+<td style="text-align: right;">-4.853611</td>
+<td style="text-align: right;">-37.77722</td>
+<td style="text-align: right;">16.57</td>
+<td style="text-align: right;">27.7</td>
+<td style="text-align: right;">33.7</td>
+<td style="text-align: right;">23.2</td>
+<td style="text-align: right;">28.45</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82798</td>
+<td style="text-align: left;">JOAO PESSOA</td>
+<td style="text-align: left;">PB</td>
+<td style="text-align: right;">-7.095278</td>
+<td style="text-align: right;">-34.84861</td>
+<td style="text-align: right;">9.67</td>
+<td style="text-align: right;">27.0</td>
+<td style="text-align: right;">30.2</td>
+<td style="text-align: right;">23.9</td>
+<td style="text-align: right;">27.05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83242</td>
+<td style="text-align: left;">LENCOIS</td>
+<td style="text-align: left;">BA</td>
+<td style="text-align: right;">-12.557854</td>
+<td style="text-align: right;">-41.38881</td>
+<td style="text-align: right;">438.09</td>
+<td style="text-align: right;">24.0</td>
+<td style="text-align: right;">29.7</td>
+<td style="text-align: right;">19.1</td>
+<td style="text-align: right;">24.40</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83184</td>
+<td style="text-align: left;">MORRO DO CHAPEU</td>
+<td style="text-align: left;">BA</td>
+<td style="text-align: right;">-11.547494</td>
+<td style="text-align: right;">-41.15116</td>
+<td style="text-align: right;">1001.66</td>
+<td style="text-align: right;">20.8</td>
+<td style="text-align: right;">26.3</td>
+<td style="text-align: right;">17.0</td>
+<td style="text-align: right;">21.65</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82598</td>
+<td style="text-align: left;">NATAL</td>
+<td style="text-align: left;">RN</td>
+<td style="text-align: right;">-5.837222</td>
+<td style="text-align: right;">-35.20778</td>
+<td style="text-align: right;">47.68</td>
+<td style="text-align: right;">26.5</td>
+<td style="text-align: right;">29.7</td>
+<td style="text-align: right;">23.2</td>
+<td style="text-align: right;">26.45</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82992</td>
+<td style="text-align: left;">PALMEIRA DOS INDIOS</td>
+<td style="text-align: left;">AL</td>
+<td style="text-align: right;">-9.420278</td>
+<td style="text-align: right;">-36.62028</td>
+<td style="text-align: right;">277.98</td>
+<td style="text-align: right;">24.8</td>
+<td style="text-align: right;">30.6</td>
+<td style="text-align: right;">20.5</td>
+<td style="text-align: right;">25.55</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82983</td>
+<td style="text-align: left;">PETROLINA</td>
+<td style="text-align: left;">PE</td>
+<td style="text-align: right;">-9.388611</td>
+<td style="text-align: right;">-40.52333</td>
+<td style="text-align: right;">372.54</td>
+<td style="text-align: right;">27.2</td>
+<td style="text-align: right;">32.5</td>
+<td style="text-align: right;">22.5</td>
+<td style="text-align: right;">27.50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82480</td>
+<td style="text-align: left;">PIRIPIRI</td>
+<td style="text-align: left;">PI</td>
+<td style="text-align: right;">-4.276111</td>
+<td style="text-align: right;">-41.79444</td>
+<td style="text-align: right;">157.89</td>
+<td style="text-align: right;">27.5</td>
+<td style="text-align: right;">34.3</td>
+<td style="text-align: right;">22.4</td>
+<td style="text-align: right;">28.35</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83097</td>
+<td style="text-align: left;">PROPRIA</td>
+<td style="text-align: left;">SE</td>
+<td style="text-align: right;">-10.213760</td>
+<td style="text-align: right;">-36.84220</td>
+<td style="text-align: right;">18.46</td>
+<td style="text-align: right;">26.2</td>
+<td style="text-align: right;">31.4</td>
+<td style="text-align: right;">22.1</td>
+<td style="text-align: right;">26.75</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82900</td>
+<td style="text-align: left;">RECIFE (CURADO)</td>
+<td style="text-align: left;">PE</td>
+<td style="text-align: right;">-8.059167</td>
+<td style="text-align: right;">-34.95917</td>
+<td style="text-align: right;">11.30</td>
+<td style="text-align: right;">26.0</td>
+<td style="text-align: right;">29.7</td>
+<td style="text-align: right;">22.3</td>
+<td style="text-align: right;">26.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">83229</td>
+<td style="text-align: left;">SALVADOR (ONDINA)</td>
+<td style="text-align: left;">BA</td>
+<td style="text-align: right;">-13.005833</td>
+<td style="text-align: right;">-38.50583</td>
+<td style="text-align: right;">47.35</td>
+<td style="text-align: right;">25.6</td>
+<td style="text-align: right;">29.0</td>
+<td style="text-align: right;">22.7</td>
+<td style="text-align: right;">25.85</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82879</td>
+<td style="text-align: left;">SAO JOAO DO PIAUI</td>
+<td style="text-align: left;">PI</td>
+<td style="text-align: right;">-8.365000</td>
+<td style="text-align: right;">-42.25028</td>
+<td style="text-align: right;">237.02</td>
+<td style="text-align: right;">27.9</td>
+<td style="text-align: right;">34.2</td>
+<td style="text-align: right;">22.8</td>
+<td style="text-align: right;">28.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82392</td>
+<td style="text-align: left;">SOBRAL</td>
+<td style="text-align: left;">CE</td>
+<td style="text-align: right;">-3.748333</td>
+<td style="text-align: right;">-40.34583</td>
+<td style="text-align: right;">91.80</td>
+<td style="text-align: right;">27.2</td>
+<td style="text-align: right;">34.4</td>
+<td style="text-align: right;">22.1</td>
+<td style="text-align: right;">28.25</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82797</td>
+<td style="text-align: left;">SURUBIM</td>
+<td style="text-align: left;">PE</td>
+<td style="text-align: right;">-7.839628</td>
+<td style="text-align: right;">-35.80106</td>
+<td style="text-align: right;">421.44</td>
+<td style="text-align: right;">24.1</td>
+<td style="text-align: right;">30.0</td>
+<td style="text-align: right;">20.3</td>
+<td style="text-align: right;">25.15</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82198</td>
+<td style="text-align: left;">TURIACU</td>
+<td style="text-align: left;">MA</td>
+<td style="text-align: right;">-1.661389</td>
+<td style="text-align: right;">-45.37194</td>
+<td style="text-align: right;">34.48</td>
+<td style="text-align: right;">27.1</td>
+<td style="text-align: right;">31.7</td>
+<td style="text-align: right;">23.6</td>
+<td style="text-align: right;">27.65</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nordeste</td>
+<td style="text-align: right;">82376</td>
+<td style="text-align: left;">ZE DOCA</td>
+<td style="text-align: left;">MA</td>
+<td style="text-align: right;">-3.269212</td>
+<td style="text-align: right;">-45.65101</td>
+<td style="text-align: right;">46.71</td>
+<td style="text-align: right;">27.3</td>
+<td style="text-align: right;">33.0</td>
+<td style="text-align: right;">23.2</td>
+<td style="text-align: right;">28.10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82659</td>
+<td style="text-align: left;">ARAGUAINA</td>
+<td style="text-align: left;">TO</td>
+<td style="text-align: right;">-7.103778</td>
+<td style="text-align: right;">-48.20133</td>
+<td style="text-align: right;">231.85</td>
+<td style="text-align: right;">25.4</td>
+<td style="text-align: right;">32.4</td>
+<td style="text-align: right;">20.4</td>
+<td style="text-align: right;">26.40</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82113</td>
+<td style="text-align: left;">BARCELOS</td>
+<td style="text-align: left;">AM</td>
+<td style="text-align: right;">-0.974167</td>
+<td style="text-align: right;">-62.92861</td>
+<td style="text-align: right;">30.65</td>
+<td style="text-align: right;">26.8</td>
+<td style="text-align: right;">32.5</td>
+<td style="text-align: right;">23.2</td>
+<td style="text-align: right;">27.85</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82191</td>
+<td style="text-align: left;">BELEM</td>
+<td style="text-align: left;">PA</td>
+<td style="text-align: right;">-1.435833</td>
+<td style="text-align: right;">-48.43722</td>
+<td style="text-align: right;">7.13</td>
+<td style="text-align: right;">26.8</td>
+<td style="text-align: right;">32.3</td>
+<td style="text-align: right;">23.1</td>
+<td style="text-align: right;">27.70</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82246</td>
+<td style="text-align: left;">BELTERRA</td>
+<td style="text-align: left;">PA</td>
+<td style="text-align: right;">-2.642222</td>
+<td style="text-align: right;">-54.94389</td>
+<td style="text-align: right;">164.30</td>
+<td style="text-align: right;">26.0</td>
+<td style="text-align: right;">31.2</td>
+<td style="text-align: right;">21.9</td>
+<td style="text-align: right;">26.55</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82263</td>
+<td style="text-align: left;">CAMETA</td>
+<td style="text-align: left;">PA</td>
+<td style="text-align: right;">-2.239722</td>
+<td style="text-align: right;">-49.49972</td>
+<td style="text-align: right;">9.93</td>
+<td style="text-align: right;">27.5</td>
+<td style="text-align: right;">33.0</td>
+<td style="text-align: right;">23.7</td>
+<td style="text-align: right;">28.35</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82326</td>
+<td style="text-align: left;">CODAJAS</td>
+<td style="text-align: left;">AM</td>
+<td style="text-align: right;">-3.841111</td>
+<td style="text-align: right;">-62.05528</td>
+<td style="text-align: right;">30.31</td>
+<td style="text-align: right;">26.6</td>
+<td style="text-align: right;">32.2</td>
+<td style="text-align: right;">22.9</td>
+<td style="text-align: right;">27.55</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82861</td>
+<td style="text-align: left;">CONCEICAO DO ARAGUAIA</td>
+<td style="text-align: left;">PA</td>
+<td style="text-align: right;">-8.259167</td>
+<td style="text-align: right;">-49.26389</td>
+<td style="text-align: right;">179.02</td>
+<td style="text-align: right;">27.4</td>
+<td style="text-align: right;">33.8</td>
+<td style="text-align: right;">22.4</td>
+<td style="text-align: right;">28.10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82610</td>
+<td style="text-align: left;">EIRUNEPE</td>
+<td style="text-align: left;">AM</td>
+<td style="text-align: right;">-6.661667</td>
+<td style="text-align: right;">-69.86778</td>
+<td style="text-align: right;">123.42</td>
+<td style="text-align: right;">26.1</td>
+<td style="text-align: right;">33.1</td>
+<td style="text-align: right;">21.3</td>
+<td style="text-align: right;">27.20</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82336</td>
+<td style="text-align: left;">ITACOATIARA</td>
+<td style="text-align: left;">AM</td>
+<td style="text-align: right;">-3.136944</td>
+<td style="text-align: right;">-58.44278</td>
+<td style="text-align: right;">19.16</td>
+<td style="text-align: right;">27.3</td>
+<td style="text-align: right;">32.3</td>
+<td style="text-align: right;">23.7</td>
+<td style="text-align: right;">28.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82445</td>
+<td style="text-align: left;">ITAITUBA</td>
+<td style="text-align: left;">PA</td>
+<td style="text-align: right;">-4.276986</td>
+<td style="text-align: right;">-55.99309</td>
+<td style="text-align: right;">24.50</td>
+<td style="text-align: right;">27.6</td>
+<td style="text-align: right;">33.3</td>
+<td style="text-align: right;">23.7</td>
+<td style="text-align: right;">28.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82098</td>
+<td style="text-align: left;">MACAPA</td>
+<td style="text-align: left;">AP</td>
+<td style="text-align: right;">-0.045000</td>
+<td style="text-align: right;">-51.11000</td>
+<td style="text-align: right;">12.80</td>
+<td style="text-align: right;">27.4</td>
+<td style="text-align: right;">31.9</td>
+<td style="text-align: right;">24.0</td>
+<td style="text-align: right;">27.95</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82331</td>
+<td style="text-align: left;">MANAUS</td>
+<td style="text-align: left;">AM</td>
+<td style="text-align: right;">-3.103889</td>
+<td style="text-align: right;">-60.01556</td>
+<td style="text-align: right;">48.86</td>
+<td style="text-align: right;">27.4</td>
+<td style="text-align: right;">32.3</td>
+<td style="text-align: right;">24.0</td>
+<td style="text-align: right;">28.15</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82562</td>
+<td style="text-align: left;">MARABA</td>
+<td style="text-align: left;">PA</td>
+<td style="text-align: right;">-5.366111</td>
+<td style="text-align: right;">-49.12528</td>
+<td style="text-align: right;">101.66</td>
+<td style="text-align: right;">27.6</td>
+<td style="text-align: right;">33.0</td>
+<td style="text-align: right;">23.4</td>
+<td style="text-align: right;">28.20</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82181</td>
+<td style="text-align: left;">MONTE ALEGRE</td>
+<td style="text-align: left;">PA</td>
+<td style="text-align: right;">-2.000000</td>
+<td style="text-align: right;">-54.07639</td>
+<td style="text-align: right;">100.52</td>
+<td style="text-align: right;">27.1</td>
+<td style="text-align: right;">31.3</td>
+<td style="text-align: right;">23.4</td>
+<td style="text-align: right;">27.35</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">83033</td>
+<td style="text-align: left;">PALMAS</td>
+<td style="text-align: left;">TO</td>
+<td style="text-align: right;">-10.190897</td>
+<td style="text-align: right;">-48.30182</td>
+<td style="text-align: right;">291.68</td>
+<td style="text-align: right;">27.0</td>
+<td style="text-align: right;">33.8</td>
+<td style="text-align: right;">22.0</td>
+<td style="text-align: right;">27.90</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82863</td>
+<td style="text-align: left;">PEDRO AFONSO</td>
+<td style="text-align: left;">TO</td>
+<td style="text-align: right;">-8.968611</td>
+<td style="text-align: right;">-48.17722</td>
+<td style="text-align: right;">189.53</td>
+<td style="text-align: right;">26.6</td>
+<td style="text-align: right;">33.5</td>
+<td style="text-align: right;">21.9</td>
+<td style="text-align: right;">27.70</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">83228</td>
+<td style="text-align: left;">PEIXE</td>
+<td style="text-align: left;">TO</td>
+<td style="text-align: right;">-12.015278</td>
+<td style="text-align: right;">-48.54500</td>
+<td style="text-align: right;">252.24</td>
+<td style="text-align: right;">26.3</td>
+<td style="text-align: right;">33.6</td>
+<td style="text-align: right;">21.3</td>
+<td style="text-align: right;">27.45</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">82184</td>
+<td style="text-align: left;">PORTO DE MOZ</td>
+<td style="text-align: left;">PA</td>
+<td style="text-align: right;">-1.751055</td>
+<td style="text-align: right;">-52.23619</td>
+<td style="text-align: right;">13.08</td>
+<td style="text-align: right;">27.3</td>
+<td style="text-align: right;">32.2</td>
+<td style="text-align: right;">23.9</td>
+<td style="text-align: right;">28.05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Norte</td>
+<td style="text-align: right;">83235</td>
+<td style="text-align: left;">TAGUATINGA</td>
+<td style="text-align: left;">TO</td>
+<td style="text-align: right;">-12.402222</td>
+<td style="text-align: right;">-46.43833</td>
+<td style="text-align: right;">604.88</td>
+<td style="text-align: right;">25.9</td>
+<td style="text-align: right;">32.4</td>
+<td style="text-align: right;">21.3</td>
+<td style="text-align: right;">26.85</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83442</td>
+<td style="text-align: left;">ARACUAI</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-16.848889</td>
+<td style="text-align: right;">-42.06083</td>
+<td style="text-align: right;">317.67</td>
+<td style="text-align: right;">25.3</td>
+<td style="text-align: right;">32.3</td>
+<td style="text-align: right;">19.9</td>
+<td style="text-align: right;">26.10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83579</td>
+<td style="text-align: left;">ARAXA</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-19.605556</td>
+<td style="text-align: right;">-46.94972</td>
+<td style="text-align: right;">1018.28</td>
+<td style="text-align: right;">21.3</td>
+<td style="text-align: right;">27.7</td>
+<td style="text-align: right;">17.1</td>
+<td style="text-align: right;">22.40</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83384</td>
+<td style="text-align: left;">ARINOS</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-15.915278</td>
+<td style="text-align: right;">-46.10722</td>
+<td style="text-align: right;">523.00</td>
+<td style="text-align: right;">25.1</td>
+<td style="text-align: right;">32.4</td>
+<td style="text-align: right;">19.3</td>
+<td style="text-align: right;">25.85</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83049</td>
+<td style="text-align: left;">AVELAR (P.DO ALFERES)</td>
+<td style="text-align: left;">RJ</td>
+<td style="text-align: right;">-22.347500</td>
+<td style="text-align: right;">-43.41778</td>
+<td style="text-align: right;">507.00</td>
+<td style="text-align: right;">20.7</td>
+<td style="text-align: right;">27.9</td>
+<td style="text-align: right;">15.5</td>
+<td style="text-align: right;">21.70</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83582</td>
+<td style="text-align: left;">BAMBUI</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-20.031111</td>
+<td style="text-align: right;">-46.00889</td>
+<td style="text-align: right;">684.43</td>
+<td style="text-align: right;">20.9</td>
+<td style="text-align: right;">29.1</td>
+<td style="text-align: right;">14.9</td>
+<td style="text-align: right;">22.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83587</td>
+<td style="text-align: left;">BELO HORIZONTE</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-19.934444</td>
+<td style="text-align: right;">-43.95222</td>
+<td style="text-align: right;">915.47</td>
+<td style="text-align: right;">22.1</td>
+<td style="text-align: right;">27.3</td>
+<td style="text-align: right;">18.0</td>
+<td style="text-align: right;">22.65</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83557</td>
+<td style="text-align: left;">BOA ESPERANCA</td>
+<td style="text-align: left;">ES</td>
+<td style="text-align: right;">-18.537222</td>
+<td style="text-align: right;">-40.27222</td>
+<td style="text-align: right;">100.00</td>
+<td style="text-align: right;">24.0</td>
+<td style="text-align: right;">30.8</td>
+<td style="text-align: right;">18.8</td>
+<td style="text-align: right;">24.80</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83533</td>
+<td style="text-align: left;">BOM DESPACHO</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-19.719444</td>
+<td style="text-align: right;">-45.36750</td>
+<td style="text-align: right;">695.00</td>
+<td style="text-align: right;">21.4</td>
+<td style="text-align: right;">30.0</td>
+<td style="text-align: right;">15.1</td>
+<td style="text-align: right;">22.55</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83698</td>
+<td style="text-align: left;">CAMPOS</td>
+<td style="text-align: left;">RJ</td>
+<td style="text-align: right;">-21.742500</td>
+<td style="text-align: right;">-41.33278</td>
+<td style="text-align: right;">11.20</td>
+<td style="text-align: right;">24.6</td>
+<td style="text-align: right;">30.0</td>
+<td style="text-align: right;">21.0</td>
+<td style="text-align: right;">25.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83514</td>
+<td style="text-align: left;">CAPINOPOLIS</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-18.726111</td>
+<td style="text-align: right;">-49.56222</td>
+<td style="text-align: right;">608.98</td>
+<td style="text-align: right;">23.6</td>
+<td style="text-align: right;">31.1</td>
+<td style="text-align: right;">19.0</td>
+<td style="text-align: right;">25.05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83592</td>
+<td style="text-align: left;">CARATINGA</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-19.735833</td>
+<td style="text-align: right;">-42.13722</td>
+<td style="text-align: right;">609.56</td>
+<td style="text-align: right;">21.7</td>
+<td style="text-align: right;">28.0</td>
+<td style="text-align: right;">16.8</td>
+<td style="text-align: right;">22.40</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83485</td>
+<td style="text-align: left;">CARBONITA</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-17.533008</td>
+<td style="text-align: right;">-43.01209</td>
+<td style="text-align: right;">765.37</td>
+<td style="text-align: right;">21.6</td>
+<td style="text-align: right;">28.7</td>
+<td style="text-align: right;">15.9</td>
+<td style="text-align: right;">22.30</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83630</td>
+<td style="text-align: left;">FRANCA</td>
+<td style="text-align: left;">SP</td>
+<td style="text-align: right;">-20.584314</td>
+<td style="text-align: right;">-47.38243</td>
+<td style="text-align: right;">1003.55</td>
+<td style="text-align: right;">21.4</td>
+<td style="text-align: right;">26.9</td>
+<td style="text-align: right;">17.4</td>
+<td style="text-align: right;">22.15</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83114</td>
+<td style="text-align: left;">IGUABA GRANDE</td>
+<td style="text-align: left;">RJ</td>
+<td style="text-align: right;">-22.846944</td>
+<td style="text-align: right;">-42.18556</td>
+<td style="text-align: right;">5.60</td>
+<td style="text-align: right;">24.1</td>
+<td style="text-align: right;">28.6</td>
+<td style="text-align: right;">20.8</td>
+<td style="text-align: right;">24.70</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83695</td>
+<td style="text-align: left;">ITAPERUNA</td>
+<td style="text-align: left;">RJ</td>
+<td style="text-align: right;">-21.204444</td>
+<td style="text-align: right;">-41.90556</td>
+<td style="text-align: right;">123.60</td>
+<td style="text-align: right;">24.2</td>
+<td style="text-align: right;">30.4</td>
+<td style="text-align: right;">19.6</td>
+<td style="text-align: right;">25.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83386</td>
+<td style="text-align: left;">JANUARIA</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-15.448054</td>
+<td style="text-align: right;">-44.36632</td>
+<td style="text-align: right;">480.00</td>
+<td style="text-align: right;">24.5</td>
+<td style="text-align: right;">32.0</td>
+<td style="text-align: right;">18.5</td>
+<td style="text-align: right;">25.25</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83692</td>
+<td style="text-align: left;">JUIZ DE FORA</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-21.770000</td>
+<td style="text-align: right;">-43.36444</td>
+<td style="text-align: right;">936.90</td>
+<td style="text-align: right;">19.4</td>
+<td style="text-align: right;">25.0</td>
+<td style="text-align: right;">15.6</td>
+<td style="text-align: right;">20.30</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83687</td>
+<td style="text-align: left;">LAVRAS</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-21.226111</td>
+<td style="text-align: right;">-44.97972</td>
+<td style="text-align: right;">916.19</td>
+<td style="text-align: right;">20.6</td>
+<td style="text-align: right;">27.5</td>
+<td style="text-align: right;">15.7</td>
+<td style="text-align: right;">21.60</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83683</td>
+<td style="text-align: left;">MACHADO</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-21.681389</td>
+<td style="text-align: right;">-45.94083</td>
+<td style="text-align: right;">892.44</td>
+<td style="text-align: right;">20.3</td>
+<td style="text-align: right;">27.8</td>
+<td style="text-align: right;">14.8</td>
+<td style="text-align: right;">21.30</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83437</td>
+<td style="text-align: left;">MONTES CLAROS</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-16.686389</td>
+<td style="text-align: right;">-43.84389</td>
+<td style="text-align: right;">645.87</td>
+<td style="text-align: right;">23.5</td>
+<td style="text-align: right;">30.1</td>
+<td style="text-align: right;">18.0</td>
+<td style="text-align: right;">24.05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83479</td>
+<td style="text-align: left;">PARACATU</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-17.244167</td>
+<td style="text-align: right;">-46.88167</td>
+<td style="text-align: right;">711.41</td>
+<td style="text-align: right;">23.6</td>
+<td style="text-align: right;">30.1</td>
+<td style="text-align: right;">18.4</td>
+<td style="text-align: right;">24.25</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83531</td>
+<td style="text-align: left;">PATOS DE MINAS</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-18.519722</td>
+<td style="text-align: right;">-46.43917</td>
+<td style="text-align: right;">947.68</td>
+<td style="text-align: right;">21.6</td>
+<td style="text-align: right;">28.5</td>
+<td style="text-align: right;">16.5</td>
+<td style="text-align: right;">22.50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83441</td>
+<td style="text-align: left;">SALINAS</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-16.154862</td>
+<td style="text-align: right;">-42.28492</td>
+<td style="text-align: right;">476.07</td>
+<td style="text-align: right;">24.0</td>
+<td style="text-align: right;">30.9</td>
+<td style="text-align: right;">18.5</td>
+<td style="text-align: right;">24.70</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83736</td>
+<td style="text-align: left;">SAO LOURENCO</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-22.126273</td>
+<td style="text-align: right;">-45.04333</td>
+<td style="text-align: right;">930.65</td>
+<td style="text-align: right;">19.4</td>
+<td style="text-align: right;">27.3</td>
+<td style="text-align: right;">13.5</td>
+<td style="text-align: right;">20.40</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83781</td>
+<td style="text-align: left;">SAO PAULO(MIR.de SANTANA)</td>
+<td style="text-align: left;">SP</td>
+<td style="text-align: right;">-23.496389</td>
+<td style="text-align: right;">-46.62000</td>
+<td style="text-align: right;">785.16</td>
+<td style="text-align: right;">20.4</td>
+<td style="text-align: right;">26.1</td>
+<td style="text-align: right;">16.4</td>
+<td style="text-align: right;">21.25</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83577</td>
+<td style="text-align: left;">UBERABA</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-19.737222</td>
+<td style="text-align: right;">-47.94972</td>
+<td style="text-align: right;">753.41</td>
+<td style="text-align: right;">22.3</td>
+<td style="text-align: right;">29.8</td>
+<td style="text-align: right;">17.0</td>
+<td style="text-align: right;">23.40</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83428</td>
+<td style="text-align: left;">UNAI</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-16.366389</td>
+<td style="text-align: right;">-46.88944</td>
+<td style="text-align: right;">595.59</td>
+<td style="text-align: right;">24.7</td>
+<td style="text-align: right;">31.8</td>
+<td style="text-align: right;">18.5</td>
+<td style="text-align: right;">25.15</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83642</td>
+<td style="text-align: left;">VICOSA</td>
+<td style="text-align: left;">MG</td>
+<td style="text-align: right;">-20.762500</td>
+<td style="text-align: right;">-42.86389</td>
+<td style="text-align: right;">697.53</td>
+<td style="text-align: right;">20.2</td>
+<td style="text-align: right;">27.1</td>
+<td style="text-align: right;">15.8</td>
+<td style="text-align: right;">21.45</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sudeste</td>
+<td style="text-align: right;">83648</td>
+<td style="text-align: left;">VITORIA</td>
+<td style="text-align: left;">ES</td>
+<td style="text-align: right;">-20.315833</td>
+<td style="text-align: right;">-40.31694</td>
+<td style="text-align: right;">36.20</td>
+<td style="text-align: right;">24.9</td>
+<td style="text-align: right;">29.1</td>
+<td style="text-align: right;">22.0</td>
+<td style="text-align: right;">25.55</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83980</td>
+<td style="text-align: left;">BAGE</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-31.305556</td>
+<td style="text-align: right;">-54.11944</td>
+<td style="text-align: right;">245.66</td>
+<td style="text-align: right;">17.9</td>
+<td style="text-align: right;">23.6</td>
+<td style="text-align: right;">13.4</td>
+<td style="text-align: right;">18.50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83919</td>
+<td style="text-align: left;">BOM JESUS</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-28.669444</td>
+<td style="text-align: right;">-50.44194</td>
+<td style="text-align: right;">1047.50</td>
+<td style="text-align: right;">15.2</td>
+<td style="text-align: right;">21.5</td>
+<td style="text-align: right;">10.6</td>
+<td style="text-align: right;">16.05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83887</td>
+<td style="text-align: left;">CAMPOS NOVOS</td>
+<td style="text-align: left;">SC</td>
+<td style="text-align: right;">-27.383889</td>
+<td style="text-align: right;">-51.21611</td>
+<td style="text-align: right;">962.86</td>
+<td style="text-align: right;">16.7</td>
+<td style="text-align: right;">22.7</td>
+<td style="text-align: right;">12.5</td>
+<td style="text-align: right;">17.60</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83883</td>
+<td style="text-align: left;">CHAPECO</td>
+<td style="text-align: left;">SC</td>
+<td style="text-align: right;">-27.135665</td>
+<td style="text-align: right;">-52.66293</td>
+<td style="text-align: right;">654.00</td>
+<td style="text-align: right;">19.3</td>
+<td style="text-align: right;">25.1</td>
+<td style="text-align: right;">15.0</td>
+<td style="text-align: right;">20.05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83912</td>
+<td style="text-align: left;">CRUZ ALTA</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-28.626111</td>
+<td style="text-align: right;">-53.61389</td>
+<td style="text-align: right;">475.52</td>
+<td style="text-align: right;">18.8</td>
+<td style="text-align: right;">25.0</td>
+<td style="text-align: right;">14.2</td>
+<td style="text-align: right;">19.60</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83842</td>
+<td style="text-align: left;">CURITIBA</td>
+<td style="text-align: left;">PR</td>
+<td style="text-align: right;">-25.448611</td>
+<td style="text-align: right;">-49.23056</td>
+<td style="text-align: right;">923.50</td>
+<td style="text-align: right;">17.8</td>
+<td style="text-align: right;">23.8</td>
+<td style="text-align: right;">13.8</td>
+<td style="text-align: right;">18.80</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83964</td>
+<td style="text-align: left;">ENCRUZILHADA DO SUL</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-30.543056</td>
+<td style="text-align: right;">-52.52472</td>
+<td style="text-align: right;">427.75</td>
+<td style="text-align: right;">17.6</td>
+<td style="text-align: right;">23.4</td>
+<td style="text-align: right;">13.6</td>
+<td style="text-align: right;">18.50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83897</td>
+<td style="text-align: left;">FLORIANOPOLIS</td>
+<td style="text-align: left;">SC</td>
+<td style="text-align: right;">-27.602500</td>
+<td style="text-align: right;">-48.62028</td>
+<td style="text-align: right;">4.64</td>
+<td style="text-align: right;">21.1</td>
+<td style="text-align: right;">25.4</td>
+<td style="text-align: right;">17.6</td>
+<td style="text-align: right;">21.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83836</td>
+<td style="text-align: left;">IRATI</td>
+<td style="text-align: left;">PR</td>
+<td style="text-align: right;">-25.502846</td>
+<td style="text-align: right;">-50.63761</td>
+<td style="text-align: right;">881.69</td>
+<td style="text-align: right;">17.5</td>
+<td style="text-align: right;">24.1</td>
+<td style="text-align: right;">13.1</td>
+<td style="text-align: right;">18.60</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83891</td>
+<td style="text-align: left;">LAGES</td>
+<td style="text-align: left;">SC</td>
+<td style="text-align: right;">-27.802108</td>
+<td style="text-align: right;">-50.33557</td>
+<td style="text-align: right;">952.73</td>
+<td style="text-align: right;">16.1</td>
+<td style="text-align: right;">22.1</td>
+<td style="text-align: right;">11.9</td>
+<td style="text-align: right;">17.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83767</td>
+<td style="text-align: left;">MARINGA</td>
+<td style="text-align: left;">PR</td>
+<td style="text-align: right;">-23.400000</td>
+<td style="text-align: right;">-51.91667</td>
+<td style="text-align: right;">542.00</td>
+<td style="text-align: right;">22.5</td>
+<td style="text-align: right;">28.4</td>
+<td style="text-align: right;">18.0</td>
+<td style="text-align: right;">23.20</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83914</td>
+<td style="text-align: left;">PASSO FUNDO</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-28.228611</td>
+<td style="text-align: right;">-52.41194</td>
+<td style="text-align: right;">684.05</td>
+<td style="text-align: right;">17.8</td>
+<td style="text-align: right;">23.9</td>
+<td style="text-align: right;">13.4</td>
+<td style="text-align: right;">18.65</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83985</td>
+<td style="text-align: left;">PELOTAS</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-31.783333</td>
+<td style="text-align: right;">-52.41667</td>
+<td style="text-align: right;">13.00</td>
+<td style="text-align: right;">18.2</td>
+<td style="text-align: right;">23.4</td>
+<td style="text-align: right;">14.3</td>
+<td style="text-align: right;">18.85</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83967</td>
+<td style="text-align: left;">PORTO ALEGRE</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-30.053611</td>
+<td style="text-align: right;">-51.17472</td>
+<td style="text-align: right;">41.18</td>
+<td style="text-align: right;">19.9</td>
+<td style="text-align: right;">25.6</td>
+<td style="text-align: right;">15.9</td>
+<td style="text-align: right;">20.75</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83936</td>
+<td style="text-align: left;">SANTA MARIA</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-29.724796</td>
+<td style="text-align: right;">-53.72046</td>
+<td style="text-align: right;">103.10</td>
+<td style="text-align: right;">19.4</td>
+<td style="text-align: right;">25.4</td>
+<td style="text-align: right;">14.9</td>
+<td style="text-align: right;">20.15</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83997</td>
+<td style="text-align: left;">SANTA VITORIA DO PALMAR</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-33.531667</td>
+<td style="text-align: right;">-53.35028</td>
+<td style="text-align: right;">24.01</td>
+<td style="text-align: right;">17.1</td>
+<td style="text-align: right;">22.1</td>
+<td style="text-align: right;">13.2</td>
+<td style="text-align: right;">17.65</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83920</td>
+<td style="text-align: left;">SAO JOAQUIM</td>
+<td style="text-align: left;">SC</td>
+<td style="text-align: right;">-28.275639</td>
+<td style="text-align: right;">-49.93464</td>
+<td style="text-align: right;">1400.07</td>
+<td style="text-align: right;">13.5</td>
+<td style="text-align: right;">18.9</td>
+<td style="text-align: right;">9.8</td>
+<td style="text-align: right;">14.35</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83907</td>
+<td style="text-align: left;">SAO LUIZ GONZAGA</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-28.417222</td>
+<td style="text-align: right;">-54.96250</td>
+<td style="text-align: right;">245.49</td>
+<td style="text-align: right;">20.7</td>
+<td style="text-align: right;">27.1</td>
+<td style="text-align: right;">15.9</td>
+<td style="text-align: right;">21.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83948</td>
+<td style="text-align: left;">TORRES</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-29.350278</td>
+<td style="text-align: right;">-49.71667</td>
+<td style="text-align: right;">4.66</td>
+<td style="text-align: right;">19.6</td>
+<td style="text-align: right;">23.4</td>
+<td style="text-align: right;">16.2</td>
+<td style="text-align: right;">19.80</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Sul</td>
+<td style="text-align: right;">83927</td>
+<td style="text-align: left;">URUGUAIANA</td>
+<td style="text-align: left;">RS</td>
+<td style="text-align: right;">-29.840000</td>
+<td style="text-align: right;">-57.08194</td>
+<td style="text-align: right;">74.41</td>
+<td style="text-align: right;">19.5</td>
+<td style="text-align: right;">25.6</td>
+<td style="text-align: right;">14.3</td>
+<td style="text-align: right;">19.95</td>
+</tr>
+</tbody>
+</table>
+</div>
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(data_inmet)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 110</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a> <span class="co"># dados para plot e como mapear as variaveis nos eixos</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">ggplot</span>(</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>   <span class="at">data =</span> data_inmet,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>   <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x =</span> altitude, <span class="at">y =</span> tcomp_anual, <span class="at">colour =</span> regiao, <span class="at">shape =</span> regiao)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a> ) <span class="sc">+</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>   <span class="co"># adicionar pontos</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>   <span class="fu">stat_poly_line</span>(<span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>   <span class="fu">stat_poly_eq</span>(<span class="fu">use_label</span>(<span class="fu">c</span>(<span class="st">"eq"</span>, <span class="st">"R2"</span>)), <span class="at">label.x =</span> <span class="fl">0.99</span>, <span class="at">size =</span> <span class="fl">2.7</span>) <span class="sc">+</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>   <span class="co"># adicionar mais marcas nos eixos</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>   <span class="fu">scale_y_continuous</span>(</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>     <span class="at">name =</span> <span class="st">"Temperatura compensada anual (°C)"</span>,</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> scales<span class="sc">::</span><span class="fu">pretty_breaks</span>(<span class="dv">15</span>),</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>     <span class="co"># limits = data_inmet |&gt; dplyr::select(contains("_anual")) |&gt; range()</span></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>   ) <span class="sc">+</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>   <span class="fu">geom_smooth</span>(<span class="at">se =</span> <span class="cn">FALSE</span>, <span class="at">linetype =</span> <span class="dv">2</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>   <span class="fu">scale_x_continuous</span>(</span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>     <span class="at">name =</span> <span class="st">"Altitude (m)"</span>,</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>     <span class="at">breaks =</span> scales<span class="sc">::</span><span class="fu">pretty_breaks</span>(<span class="dv">15</span>)</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>   ) <span class="sc">+</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">slope =</span> lapse_rate<span class="sc">/</span><span class="dv">1000</span>,</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">intercept =</span> <span class="dv">19</span><span class="sc">:</span><span class="dv">30</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>, </span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">linetype =</span> <span class="dv">3</span></span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: The `scale_name` argument of `continuous_scale()` is deprecated as of ggplot2</span></span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3.5.0.</span></span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: The `trans` argument of `continuous_scale()` is deprecated as of ggplot2 3.5.0.</span></span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; ℹ Please use the `transform` argument instead.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tvvt-br-emcs-inmet_files/figure-html/plot-ttvt_tcomp-por-reg-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tvvt_by_region</span>(<span class="at">yvar =</span> <span class="st">"tmed_anual"</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tvvt-br-emcs-inmet_files/figure-html/plot-ttvt_tmed-por-reg-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a> <span class="fu">plot_tvvt_by_region</span>(<span class="at">yvar =</span> <span class="st">"tmin_anual"</span>, <span class="at">lr_intercs =</span> <span class="dv">14</span><span class="sc">:</span><span class="dv">26</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tvvt-br-emcs-inmet_files/figure-html/plot-ttvt_tmin-por-reg-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot_tvvt_by_region</span>(<span class="at">yvar =</span> <span class="st">"tmax_anual"</span>, <span class="at">lr_intercs =</span> <span class="dv">24</span><span class="sc">:</span><span class="dv">36</span>)</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; `geom_smooth()` using method = 'loess' and formula = 'y ~ x'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tvvt-br-emcs-inmet_files/figure-html/plot-ttvt_tmax-por-reg-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
