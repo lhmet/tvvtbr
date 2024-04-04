@@ -2,7 +2,6 @@
 
 plot_tvvt <- function(.data_inmet, 
          yvar = "tmed_anual",
-         lab_eixo_y = "Temperatura média anual (°C)",
          tvvt,
          intercepto,
          rquad,
@@ -12,7 +11,14 @@ plot_tvvt <- function(.data_inmet,
          nl_reg = TRUE
          ){
   
-  
+  lab_eixo_y <- dplyr::case_match(
+    yvar,
+    "tmed_anual" ~ "Temperatura média anual (°C)",
+    "tmax_anual" ~ "Temperatura máxima anual (°C)",
+    "tmin_anual" ~ "Temperatura mínima anual (°C)",
+    "tcomp_anual" ~ "Temperatura compensada anual (°C)"
+  )
+    
     # dados para plot e como mapear as variaveis nos eixos
     g <- ggplot(data = .data_inmet, mapping = aes(x = altitude, y = !!rlang::sym(yvar))) +
     # adicionar pontos
@@ -22,7 +28,7 @@ plot_tvvt <- function(.data_inmet,
     #geom_smooth(se = FALSE, linetype = 2, colour = "white") + 
     # adicionar mais marcas nos eixos 
     scale_y_continuous(
-      name = "Temperatura média anual (°C)",
+      name = lab_eixo_y,
       breaks = scales::pretty_breaks(nmarcas)
     ) +
     scale_x_continuous(
@@ -38,7 +44,7 @@ plot_tvvt <- function(.data_inmet,
             subtitle = glue::glue("Lapse rate: {round(lapse_rate, 3)} °C/km")) +
     theme(plot.title = element_text(color = cor_tvvt))
   
-    if(nl_reg){
+    if (nl_reg) {
       g <- g + geom_smooth(se = FALSE, linetype = 2, linewidth = 0.2, color = cor_tvvt)
     }
   g

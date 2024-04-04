@@ -292,7 +292,6 @@ Gráfico para T~min~.
 
 plot_tvvt_tmin <- plot_tvvt(data_inmet, 
                           yvar = "tmin_anual", 
-                          lab_eixo_y = "Temperatura mínima anual", 
                           tvvt = tvvt_tmin, 
                           intercepto = intercep_tmin,
                           rquad =  r2_tmin,
@@ -331,7 +330,6 @@ Gráfico para T~max~.
 #| label: plot-tmax
 plot_tvvt_tmax <- plot_tvvt(data_inmet, 
                           yvar = "tmax_anual", 
-                          lab_eixo_y = "Temperatura mínima anual", 
                           tvvt = tvvt_tmax, 
                           intercepto = intercep_tmax, 
                           rquad = r2_tmax,
@@ -368,7 +366,6 @@ Gráfico para T~comp~.
 
 plot_tvvt_tcomp <- plot_tvvt(data_inmet, 
                           yvar = "tcomp_anual", 
-                          lab_eixo_y = "Temperatura compensada anual", 
                           tvvt = tvvt_tcomp, 
                           intercepto = intercep_tcomp, 
                           rquad = r2_tcomp,
