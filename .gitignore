@@ -3,9 +3,6 @@
 .RData
 .Ruserdata
 *.html
-doc/tvvt-br-rmcs-inmet_files
-doc/*.html
-doc/**/*
 output/*
 refs/*
 !doc/*.qmd
