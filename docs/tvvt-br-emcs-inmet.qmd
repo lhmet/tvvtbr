@@ -434,6 +434,7 @@ data_inmet <- dplyr::left_join(
 
 
 kable(data_inmet)
+nrow(data_inmet)
 
 ```
 
