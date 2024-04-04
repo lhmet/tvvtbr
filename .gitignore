@@ -6,3 +6,4 @@
 output/*
 refs/*
 !docs/*.qmd
+/.quarto/
