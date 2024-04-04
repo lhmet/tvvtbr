@@ -6,5 +6,5 @@
 output/*
 refs/*
 /.quarto/
-/docs/*
-!docs/*.qmd
+#/docs/*
+#!docs/*.qmd
