@@ -16,6 +16,8 @@ knitr:
     code-fold: true
 ---
 
+
+
 ## Introdução
 
 Esta atividade tem por objetivo obter a taxa de variação vertical da temperatura do ar (TVVT) a partir dos dados de temperatura das estações meteorológicas convencionais (EMC) do INMET e compará-la com a TVVT média global (*Lapse rate* da atmosfera padrão) de -6,5°C/km. 
@@ -410,6 +412,8 @@ ggp_emcs
 Em seguida, vamos incluir a informação da região nos dados `data_inmet` para visualizar as variações da TVVT por região. Para isso faremos a junção do `data_inmet` com os polígonos dos estados (`pols_estados`) usando como variável de ligação a coluna `uf` que é comum a ambos conjunto de dados.
 
 ```{r}
+#| label: add-estado
+
 data_inmet <- dplyr::left_join(
   data_inmet,
   # tirar as coordenadas dos polígonos (coluna geometry)
@@ -427,11 +431,14 @@ nrow(data_inmet)
 ```
 
 ```{r}
+#| label: save-tab-uf-region
 #| include: false
 # para auxilair alunos
 readr::write_csv(pols_estados |> sf::st_drop_geometry(),
                  here("output", "regioes-estados.csv"))
 ```
+
+## Temperatura compensada 
 
 ```{r}
 #| label: plot-ttvt_tcomp-por-reg
@@ -463,11 +470,15 @@ readr::write_csv(pols_estados |> sf::st_drop_geometry(),
     )
 ```
 
+## Temperatura média
+
 ```{r}
 #| label: plot-ttvt_tmed-por-reg
 plot_tvvt_by_region(yvar = "tmed_anual")
 
 ```
+
+## Temperatura mínima
 
 ```{r}
 #| label: plot-ttvt_tmin-por-reg
@@ -475,6 +486,8 @@ plot_tvvt_by_region(yvar = "tmed_anual")
  plot_tvvt_by_region(yvar = "tmin_anual", lr_intercs = 14:26)
 
 ```
+
+## Temperatura máxima
 
 ```{r}
 #| label: plot-ttvt_tmax-por-reg
